@@ -9,14 +9,23 @@
 // using std::cout
 // using std::cerr
 
-#include <fstream>
-// using std::ifstream
-
 #include <vector>
 // using std::vector
 
+#include <string>
+// using std::string
+
 #include <map>
 // using std::map
+
+#include <fstream>
+// using std::ifstream
+
+#include <bitset>
+// using std::bitset
+
+#include <string>
+// using std::string
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -32,36 +41,37 @@ int main(int argc, char *argv[]) {
     std::exit(-1);
   }
 
-  std::map<int, unsigned> frequency_count;
-  std::vector<int> changes;
+  std::string id;
+  std::vector<std::string> boxids;
 
-  int change = 0;
-  while (fin >> change) {
-    changes.push_back(change);
+  while (fin >> id) {
+    boxids.push_back(id);
   }
 
-  int frequency = 0;
-  frequency_count[frequency] = 1;
+  std::string found;
+  std::bitset<64> diff;
+  for (unsigned i = 0; i < boxids.size(); i++) {
+    for (unsigned j = i + 1; j < boxids.size(); j++) {
+      diff.reset();
 
-  bool found = false;
-  while (!found) {
-    for (auto c : changes) {
-      frequency += c;
-
-      if (!frequency_count.count(frequency)) {
-        frequency_count[frequency] = 1;
-      } else {
-        frequency_count[frequency] += 1;
-
-        if (frequency_count[frequency] >= 2) {
-          found = true;
-          break;
+      for (unsigned k = 0; k < boxids[i].size(); k++) {
+        if (boxids[i][k] != boxids[j][k]) {
+          diff.set(k);
         }
+      }
+
+      if (diff.count() == 1) {
+        int pos = 0;
+        while (diff.count()) {
+          diff >>= 1;
+          pos++;
+        }
+        found = boxids[i].erase(pos - 1, 1);
       }
     }
   }
 
-  std::cout << "first recurring frequency: " << frequency << "\n";
+  std::cout << found << '\n';
 
   return 0;
 }
