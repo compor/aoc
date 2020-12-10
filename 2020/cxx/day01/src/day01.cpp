@@ -16,14 +16,25 @@
 #include <set>
 // using std::set
 
+#include <tuple>
+// using std::tuple
+
+#include <functional>
+// using std::get
+
 #include <optional>
 // using std::optional
 
-auto find_desired_sum_parts(const std::set<int> &input, int desired_sum) {
+auto find_desired_sum_pair(const std::set<int> &input, int desired_sum,
+                           int exclude_val = 0) {
   bool found = false;
   int complement = 0;
 
   for (auto &e : input) {
+    if (e == exclude_val) {
+      continue;
+    }
+
     complement = desired_sum - e;
 
     if (input.count(complement)) {
@@ -38,8 +49,31 @@ auto find_desired_sum_parts(const std::set<int> &input, int desired_sum) {
 }
 
 int part1(const std::set<int> &input) {
-  if (auto p = find_desired_sum_parts(input, 2020)) {
+  if (auto p = find_desired_sum_pair(input, 2020)) {
     return p->first * p->second;
+  }
+
+  return 0;
+}
+
+std::optional<std::tuple<int, int, int>>
+find_desired_sum_triplet(const std::set<int> &input, int desired_sum) {
+  int complement = 0;
+
+  for (auto &e : input) {
+    complement = desired_sum - e;
+
+    if (auto p = find_desired_sum_pair(input, complement, e)) {
+      return std::make_tuple(e, p->first, p->second);
+    }
+  }
+
+  return {};
+}
+
+int part2(const std::set<int> &input) {
+  if (auto p = find_desired_sum_triplet(input, 2020)) {
+    return std::get<0>(*p) * std::get<1>(*p) * std::get<2>(*p);
   }
 
   return 0;
@@ -67,6 +101,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << part1(input) << std::endl;
+  std::cout << part2(input) << std::endl;
 
   return EXIT_SUCCESS;
 }
