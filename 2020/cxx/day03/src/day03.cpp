@@ -41,6 +41,17 @@ auto count_trees(const map_t &map, const position_t &start_pos,
   return trees;
 }
 
+auto multiply_trees_per_slope(const map_t &map, const position_t &start_pos,
+                              const std::vector<position_t> &steps) {
+  unsigned prod = 1;
+
+  for (const auto &step : steps) {
+    prod *= count_trees(map, start_pos, step);
+  }
+
+  return prod;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     std::cerr << "incorrect number of arguments provided!\n";
@@ -67,7 +78,12 @@ int main(int argc, char *argv[]) {
 
   const auto &part1 = count_trees;
 
+  std::vector<position_t> steps = {{1, 1}, {1, 3}, {1, 5}, {1, 7}, {2, 1}};
+
+  const auto &part2 = multiply_trees_per_slope;
+
   std::cout << part1(input, pos, step) << std::endl;
+  std::cout << part2(input, pos, steps) << std::endl;
 
   return EXIT_SUCCESS;
 }
