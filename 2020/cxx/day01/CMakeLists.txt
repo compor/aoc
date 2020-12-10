@@ -1,6 +1,6 @@
 # cmake file
 
-set(DAY_TARGETS day01a)
+set(DAY_TARGETS day01)
 
 foreach(DT ${DAY_TARGETS})
   add_executable(${DT} src/${DT}.cpp)
