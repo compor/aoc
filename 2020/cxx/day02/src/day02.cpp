@@ -39,13 +39,22 @@ std::optional<record_t> parse_line(std::string &line) {
   return std::nullopt;
 }
 
-bool is_valid(const record_t &r) {
+bool is_valid_part1(const record_t &r) {
   auto n = std::count(r.second.begin(), r.second.end(), r.first.c);
   return n >= r.first.lower && n <= r.first.upper;
 }
 
+bool is_valid_part2(const record_t &r) {
+  return (r.second[r.first.lower - 1] == r.first.c) ^
+         (r.second[r.first.upper - 1] == r.first.c);
+}
+
 auto part1(const db_t &db) {
-  return std::count_if(db.begin(), db.end(), is_valid);
+  return std::count_if(db.begin(), db.end(), is_valid_part1);
+}
+
+auto part2(const db_t &db) {
+  return std::count_if(db.begin(), db.end(), is_valid_part2);
 }
 
 int main(int argc, char *argv[]) {
@@ -72,6 +81,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << part1(input) << std::endl;
+  std::cout << part2(input) << std::endl;
 
   return EXIT_SUCCESS;
 }
