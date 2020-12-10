@@ -6,3 +6,4 @@ project(aoc2020 CXX)
 
 add_subdirectory(day01)
 add_subdirectory(day02)
+add_subdirectory(day03)
