@@ -7,30 +7,23 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <optional>
-#include <regex>
 #include <set>
 #include <sstream>
 #include <utility>
 #include <vector>
 
-using group_answer_t = std::set<char>;
+using group_answer_t = std::vector<std::string>;
 
 using customs_declaration_t = std::vector<std::string>;
 
 group_answer_t parse_entry(const std::string &entry) {
-  std::regex entry_regex{"\\s*([a-z]*)\\s*"};
-  std::smatch matches;
   group_answer_t answers;
   std::string entryval;
   std::istringstream iss(entry);
 
   while (std::getline(iss, entryval, ' ')) {
-    if (std::regex_match(entryval, matches, entry_regex)) {
-      for (auto &e : matches[1].str()) {
-        answers.insert(e);
-      }
-    }
+    if (entryval != "")
+      answers.push_back(entryval);
   }
 
   return answers;
@@ -46,7 +39,7 @@ auto parse_list(const customs_declaration_t &cd) {
       current = "";
     }
 
-    current += e;
+    current += e + " ";
   }
 
   group_answers.push_back(parse_entry(current));
@@ -79,12 +72,44 @@ int main(int argc, char *argv[]) {
 
   const auto &part1 = [&customs_declarations]() {
     auto acc = 0;
+
     for_each(customs_declarations.begin(), customs_declarations.end(),
-             [&acc](const auto &e) { acc += e.size(); });
+             [&](const auto &e) {
+               std::set<char> collective_answer;
+
+               for (auto &k : e) {
+                 collective_answer.insert(k.begin(), k.end());
+               }
+
+               acc += collective_answer.size();
+             });
+    return acc;
+  };
+  const auto &part2 = [&customs_declarations]() {
+    auto acc = 0;
+
+    for_each(customs_declarations.begin(), customs_declarations.end(),
+             [&](const auto &e) {
+               std::string is(*e.begin());
+
+               for (auto k : e) {
+                 std::string tmp;
+
+                 std::sort(is.begin(), is.end());
+                 std::sort(k.begin(), k.end());
+
+                 std::set_intersection(is.begin(), is.end(), k.begin(), k.end(),
+                                       std::back_inserter(tmp));
+                 is = tmp;
+               }
+
+               acc += is.size();
+             });
     return acc;
   };
 
   std::cout << part1() << std::endl;
+  std::cout << part2() << std::endl;
 
   return EXIT_SUCCESS;
 }
