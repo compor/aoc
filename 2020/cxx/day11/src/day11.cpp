@@ -53,7 +53,7 @@ std::ostream &operator<<(std::ostream &os, const seat_layout_t &layout) {
 }
 
 std::vector<std::reference_wrapper<const seat_t>>
-get_adjacent_seats(const seat_layout_t &layout, const seat_t &seat) {
+get_adjacent_seats_part1(const seat_layout_t &layout, const seat_t &seat) {
   std::vector<std::reference_wrapper<const seat_t>> seats;
 
   // ABOVE
@@ -101,23 +101,111 @@ get_adjacent_seats(const seat_layout_t &layout, const seat_t &seat) {
 }
 
 std::vector<std::reference_wrapper<const seat_t>>
-sim_step(const seat_layout_t &layout, const seat_t &seat) {
+get_adjacent_seats_part2(const seat_layout_t &layout, const seat_t &seat) {
+  std::vector<std::reference_wrapper<const seat_t>> seats;
+
+  // ABOVE
+  for (int i = seat.row - 1; i >= 0; --i) {
+    // UP
+    if (is_floor(layout[i][seat.col]))
+      continue;
+
+    seats.push_back(layout[i][seat.col]);
+    break;
+  }
+
+  // ABOVE
+  for (int i = seat.row - 1, j = seat.col - 1; i >= 0 && j >= 0; --i, --j) {
+    // LEFT
+    if (is_floor(layout[i][j]))
+      continue;
+
+    seats.push_back(layout[i][j]);
+    break;
+  }
+
+  // ABOVE
+  for (int i = seat.row - 1, j = seat.col + 1; i >= 0 && j < layout[i].size();
+       --i, ++j) {
+    // RIGHT
+    if (is_floor(layout[i][j]))
+      continue;
+
+    seats.push_back(layout[i][j]);
+    break;
+  }
+
+  // BELOW
+  for (int i = seat.row + 1; i < layout.size(); ++i) {
+    // UP
+    if (is_floor(layout[i][seat.col]))
+      continue;
+
+    seats.push_back(layout[i][seat.col]);
+    break;
+  }
+
+  // BELOW
+  for (int i = seat.row + 1, j = seat.col - 1; i < layout.size() && j >= 0;
+       ++i, --j) {
+    // LEFT
+    if (is_floor(layout[i][j]))
+      continue;
+
+    seats.push_back(layout[i][j]);
+    break;
+  }
+
+  // BELOW
+  for (int i = seat.row + 1, j = seat.col + 1;
+       i < layout.size() && j < layout[i].size(); ++i, ++j) {
+    // RIGHT
+    if (is_floor(layout[i][j]))
+      continue;
+
+    seats.push_back(layout[i][j]);
+    break;
+  }
+
+  // DIRECTLY LEFT
+  for (int j = seat.col - 1; j >= 0; --j) {
+    if (is_floor(layout[seat.row][j]))
+      continue;
+
+    seats.push_back(layout[seat.row][j]);
+    break;
+  }
+  // DIRECTLY RIGHT
+  for (int j = seat.col + 1; j < layout[seat.row].size(); ++j) {
+    if (is_floor(layout[seat.row][j]))
+      continue;
+
+    seats.push_back(layout[seat.row][j]);
+    break;
+  }
+
+  return seats;
+}
+
+template <typename SeatContainerIteratorT>
+std::vector<std::reference_wrapper<const seat_t>>
+update(const seat_t &seat, const int occupied_tolerance,
+       SeatContainerIteratorT begin, SeatContainerIteratorT end) {
   std::vector<std::reference_wrapper<const seat_t>> to_update;
 
   if (is_floor(seat)) {
     return to_update;
   }
 
-  const auto &adj_seats = get_adjacent_seats(layout, seat);
-
   if (is_unoccupied(seat)) {
-    if (0 == std::count_if(adj_seats.begin(), adj_seats.end(),
+    if (0 == std::count_if(begin, end,
                            [](const auto &e) { return is_occupied(e); })) {
       to_update.push_back(seat);
     }
   } else {
-    if (std::count_if(adj_seats.begin(), adj_seats.end(),
-                      [](const auto &e) { return is_occupied(e); }) >= 4) {
+    if (std::count_if(begin, end, [](const auto &e) {
+          return is_occupied(e);
+        }) >= occupied_tolerance) {
       to_update.push_back(seat);
     }
   }
@@ -125,7 +213,36 @@ sim_step(const seat_layout_t &layout, const seat_t &seat) {
   return to_update;
 }
 
-bool sim(seat_layout_t &layout, bool debug = false) {
+std::vector<std::reference_wrapper<const seat_t>>
+sim_step_part1(const seat_layout_t &layout, const seat_t &seat) {
+  std::vector<std::reference_wrapper<const seat_t>> to_update;
+
+  if (is_floor(seat)) {
+    return to_update;
+  }
+
+  const auto &adj_seats = get_adjacent_seats_part1(layout, seat);
+  to_update = update(seat, 4, adj_seats.begin(), adj_seats.end());
+
+  return to_update;
+}
+
+std::vector<std::reference_wrapper<const seat_t>>
+sim_step_part2(const seat_layout_t &layout, const seat_t &seat) {
+  std::vector<std::reference_wrapper<const seat_t>> to_update;
+
+  if (is_floor(seat)) {
+    return to_update;
+  }
+
+  const auto &adj_seats = get_adjacent_seats_part2(layout, seat);
+  to_update = update(seat, 5, adj_seats.begin(), adj_seats.end());
+
+  return to_update;
+}
+
+template <typename StepFuncT>
+void sim(seat_layout_t &layout, StepFuncT &step, bool debug = false) {
   int row = 0, col = 0;
   bool changed = true;
 
@@ -134,7 +251,7 @@ bool sim(seat_layout_t &layout, bool debug = false) {
 
     for (row = 0; row < layout.size(); ++row) {
       for (col = 0; col < layout[row].size(); ++col) {
-        auto to_update = sim_step(layout, layout[row][col]);
+        auto to_update = step(layout, layout[row][col]);
 
         for (const auto &e : to_update) {
           to_update_from_step.insert(std::make_pair(e.get().row, e.get().col));
@@ -153,7 +270,7 @@ bool sim(seat_layout_t &layout, bool debug = false) {
     }
   }
 
-  return changed;
+  return;
 }
 
 int main(int argc, char *argv[]) {
@@ -186,11 +303,14 @@ int main(int argc, char *argv[]) {
     input.push_back(row_seats);
   }
 
-  sim(input);
+  auto layout_part1 = std::move(input);
+  auto layout_part2 = layout_part1;
+  sim(layout_part1, sim_step_part1);
+  sim(layout_part2, sim_step_part2);
 
-  const auto &part1 = [&input]() {
+  const auto &count_occupied = [](const auto &layout) {
     int acc = 0;
-    std::for_each(input.begin(), input.end(), [&acc](const auto &row) {
+    std::for_each(layout.begin(), layout.end(), [&acc](const auto &row) {
       acc += std::count_if(row.begin(), row.end(), [](const auto &e) {
         return !is_floor(e) && is_occupied(e);
       });
@@ -198,7 +318,8 @@ int main(int argc, char *argv[]) {
 
     return acc;
   };
-  std::cout << part1() << std::endl;
+  std::cout << count_occupied(layout_part1) << std::endl;
+  std::cout << count_occupied(layout_part2) << std::endl;
 
   return EXIT_SUCCESS;
 }
