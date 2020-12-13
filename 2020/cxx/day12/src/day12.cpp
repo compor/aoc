@@ -94,12 +94,37 @@ void process_part1(pos_t &pos, const cmd_t &cmd) {
   }
 }
 
-void process_part2(pos_t &ship, pos_t &waypoint, const cmd_t &cmd) {
+void rotate(pos_t &pos, const cmd_t &cmd) {
+  pos_t newpos;
+
+  for (int turn = cmd.val % 360; turn; turn -= 90) {
+    if (cmd.action == 'R') {
+      newpos.x = pos.y;
+      newpos.y = -1 * pos.x;
+    } else {
+      newpos.x = -1 * pos.y;
+      newpos.y = pos.x;
+    }
+    pos = newpos;
+  }
+}
+
+void process_part2(pos_t &pos, pos_t &waypoint, const cmd_t &cmd) {
   switch (cmd.action) {
   case 'N':
   case 'S':
   case 'E':
   case 'W':
+    process_part1(waypoint, cmd);
+    break;
+  case 'F':
+    for (auto i = 0; i < cmd.val; ++i) {
+      move(pos, waypoint);
+    }
+    break;
+  case 'R':
+  case 'L':
+    rotate(waypoint, cmd);
     break;
   default:
     break;
@@ -131,14 +156,18 @@ int main(int argc, char *argv[]) {
     input.push_back({inputval[0], std::atoi(inputval.c_str() + 1)});
   }
 
-  pos_t pos{0, 0, 0};
-  pos_t start = pos;
+  pos_t pos_part1{0, 0, 0};
+  pos_t start = pos_part1;
+  pos_t pos_part2 = pos_part1;
+  pos_t waypoint{10, 1, 0};
 
   for (const auto &e : input) {
-    process_part1(pos, e);
+    process_part1(pos_part1, e);
+    process_part2(pos_part2, waypoint, e);
   }
 
-  std::cout << glasgow_distance(pos, start) << std::endl;
+  std::cout << glasgow_distance(pos_part1, start) << std::endl;
+  std::cout << glasgow_distance(pos_part2, start) << std::endl;
 
   return EXIT_SUCCESS;
 }
