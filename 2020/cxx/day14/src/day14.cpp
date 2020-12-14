@@ -10,6 +10,7 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 using mask_t = std::string;
 using ull = unsigned long long;
@@ -65,10 +66,59 @@ void execute(const ins_t &ins, mask_t &mask, mem_t &mem) {
     mask = ins.mask;
   } else {
     auto val = apply_mask(mask, ins.val);
-    if (!mem.count(ins.loc)) {
-      mem.insert({ins.loc, val});
+    mem[ins.loc] = val;
+  }
+}
+
+mask_t apply_mask2(const mask_t &mask, ull loc) {
+  mask_t fa{""};
+
+  for (auto i = 0ul; i < mask.size(); ++i) {
+    if (mask[i] == 'X') {
+      fa.push_back('X');
+    } else if (mask[i] == '1') {
+      fa.push_back('1');
     } else {
-      mem[ins.loc] = val;
+      fa.push_back(loc & (1ULL << i) ? '1' : '0');
+    }
+  }
+
+  return fa;
+}
+
+void generate_addresses(const mask_t &fa, ull a, ull offset,
+                        std::vector<ull> &addresses) {
+  if (offset >= fa.size()) {
+    addresses.push_back(a);
+    return;
+  }
+
+  if (fa[offset] != 'X') {
+    if (fa[offset] == '1') {
+      a |= 1ULL << offset;
+    }
+
+    offset++;
+    generate_addresses(fa, a, offset, addresses);
+  } else {
+    generate_addresses(fa, a, offset + 1, addresses);
+
+    a |= 1ULL << offset;
+    generate_addresses(fa, a, offset + 1, addresses);
+  }
+}
+
+void execute2(const ins_t &ins, mask_t &mask, mem_t &mem) {
+  if (ins.mask != "") {
+    mask = ins.mask;
+  } else {
+    auto loc = apply_mask2(mask, ins.loc);
+    std::vector<ull> addresses;
+
+    generate_addresses(loc, 0, 0, addresses);
+
+    for (const auto &e : addresses) {
+      mem[e] = ins.val;
     }
   }
 }
@@ -88,15 +138,16 @@ int main(int argc, char *argv[]) {
   }
 
   std::string inputval;
-  mask_t mask;
-  mem_t mem;
+  mask_t mask, mask2;
+  mem_t mem, mem2;
 
   while (std::getline(fin, inputval)) {
     auto input = parse_entry(inputval);
     execute(input, mask, mem);
+    execute2(input, mask2, mem2);
   }
 
-  const auto &part1 = [](const mem_t &mem) {
+  const auto &sum_address_space = [](const mem_t &mem) {
     ull sum = 0;
     for (const auto &e : mem) {
       sum += e.second;
@@ -104,7 +155,10 @@ int main(int argc, char *argv[]) {
     return sum;
   };
 
-  std::cout << part1(mem) << std::endl;
+  std::vector<ull> addresses;
+
+  std::cout << sum_address_space(mem) << std::endl;
+  std::cout << sum_address_space(mem2) << std::endl;
 
   return EXIT_SUCCESS;
 }
