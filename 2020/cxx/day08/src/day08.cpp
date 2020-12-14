@@ -6,8 +6,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <numeric>
+#include <set>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -18,7 +18,6 @@ using ull = unsigned long long int;
 struct instruction_t {
   std::string op;
   sll val;
-  ull count;
 };
 
 using program_t = std::vector<instruction_t>;
@@ -26,8 +25,9 @@ using acc_t = sll;
 
 void execute(program_t &program, acc_t &acc) {
   ull pc = 0;
+  std::set<ull> visited;
 
-  for (; program[pc].count <= 0;) {
+  for (; !visited.count(pc);) {
     sll step = 1;
 
     if (program[pc].op == "acc") {
@@ -38,7 +38,7 @@ void execute(program_t &program, acc_t &acc) {
       // nop
     }
 
-    program[pc].count++;
+    visited.insert(pc);
     pc += step;
   }
 }
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
   program_t program;
 
   while (fin >> inputval1 >> inputval2) {
-    program.push_back({inputval1, std::atoll(inputval2.c_str()), 0ull});
+    program.push_back({inputval1, std::atoll(inputval2.c_str())});
   }
 
   acc_t acc = 0;
