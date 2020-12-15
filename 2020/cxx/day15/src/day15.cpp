@@ -45,8 +45,9 @@ int main(int argc, char *argv[]) {
     turn++;
   }
 
-  const auto &part1 = [&last, &spoken, &turn](ull max_turn) {
-    for (; turn <= max_turn_part1; ++turn) {
+  const auto &part1 = [](decltype(spoken) spoken, ull turn, ull last,
+                         ull max_turn) {
+    for (; turn <= max_turn; ++turn) {
       last = spoken[last].first ? spoken[last].second - spoken[last].first : 0;
 
       // update last spoken
@@ -60,7 +61,8 @@ int main(int argc, char *argv[]) {
     return last;
   };
 
-  std::cout << part1(max_turn_part1) << std::endl;
+  std::cout << part1(spoken, turn, last, max_turn_part1) << std::endl;
+  std::cout << part1(spoken, turn, last, max_turn_part2) << std::endl;
 
   return EXIT_SUCCESS;
 }
