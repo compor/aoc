@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   fin.open(argv[1]);
 
   std::string inputval;
-  std::vector<ull> window;
+  std::vector<ull> input;
   std::set<ull> p;
   const ull n = 25; // preamble length
   ull val = 0;
@@ -30,13 +30,13 @@ int main(int argc, char *argv[]) {
     val = std::stoull(inputval);
 
     if (we++ < n) {
-      window.push_back(val);
+      input.push_back(val);
       p.insert(val);
     } else {
-      if (std::any_of(window.begin(), window.end(),
+      if (std::any_of(input.begin(), input.end(),
                       [val, &p](const auto &e) { return p.count(val - e); })) {
-        p.erase(window[wb++]);
-        window.push_back(val);
+        p.erase(input[wb++]);
+        input.push_back(val);
         p.insert(val);
       } else {
         break;
@@ -45,6 +45,25 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << val << std::endl;
+
+  ull we2 = 0;
+  ull wb2 = 0;
+  for (auto i = 0u; i < we; ++i) {
+    wb2 = i;
+    we2 = i + 1;
+    ull sum = input[wb2] + input[we2];
+    while (sum < val) {
+      sum += input[++we2];
+    }
+
+    if (sum == val) {
+      break;
+    }
+  }
+
+  std::sort(&input[wb2], &input[we2]);
+
+  std::cout << input[wb2] + input[we2] << std::endl;
 
   return EXIT_SUCCESS;
 }
