@@ -6,11 +6,11 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <numeric>
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 using ull = unsigned long long;
 
@@ -19,23 +19,23 @@ int main(int argc, char *argv[]) {
   fin.open(argv[1]);
 
   std::string inputval;
-  std::list<ull> window;
+  std::vector<ull> window;
   std::set<ull> p;
   const ull n = 25; // preamble length
   ull val = 0;
 
-  ull i = 0;
+  ull we = 0;
+  ull wb = 0;
   while (fin >> inputval) {
     val = std::stoull(inputval);
 
-    if (i++ < n) {
+    if (we++ < n) {
       window.push_back(val);
       p.insert(val);
     } else {
       if (std::any_of(window.begin(), window.end(),
                       [val, &p](const auto &e) { return p.count(val - e); })) {
-        p.erase(window.front());
-        window.pop_front();
+        p.erase(window[wb++]);
         window.push_back(val);
         p.insert(val);
       } else {
