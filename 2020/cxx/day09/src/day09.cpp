@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   std::string inputval;
   std::list<ull> window;
   std::set<ull> p;
-  const ull n = 5; // preamble length
+  const ull n = 25; // preamble length
   ull val = 0;
 
   ull i = 0;
