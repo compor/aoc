@@ -9,10 +9,8 @@
 #include <list>
 #include <numeric>
 #include <set>
-#include <sstream>
 #include <string>
 #include <utility>
-#include <vector>
 
 using ull = unsigned long long;
 
@@ -30,27 +28,20 @@ int main(int argc, char *argv[]) {
   while (fin >> inputval) {
     val = std::stoull(inputval);
 
-    if (i < n) {
+    if (i++ < n) {
       window.push_back(val);
       p.insert(val);
     } else {
-      for (const auto &e : window) {
-        auto c = val - e;
-        if (p.count(c)) {
-          goto found;
-        }
+      if (std::any_of(window.begin(), window.end(),
+                      [val, &p](const auto &e) { return p.count(val - e); })) {
+        p.erase(window.front());
+        window.pop_front();
+        window.push_back(val);
+        p.insert(val);
+      } else {
+        break;
       }
-
-      break;
-
-    found:
-      p.erase(window.front());
-      window.pop_front();
-      window.push_back(val);
-      p.insert(val);
     }
-
-    i++;
   }
 
   std::cout << val << std::endl;
