@@ -16,7 +16,8 @@
 
 using ull = unsigned long long;
 
-const ull max_turn = 2020;
+const ull max_turn_part1 = 2020;
+const ull max_turn_part2 = 30000000;
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -44,19 +45,22 @@ int main(int argc, char *argv[]) {
     turn++;
   }
 
-  for (; turn <= max_turn; ++turn) {
-    last = spoken[last].first ? spoken[last].second - spoken[last].first : 0;
+  const auto &part1 = [&last, &spoken, &turn](ull max_turn) {
+    for (; turn <= max_turn_part1; ++turn) {
+      last = spoken[last].first ? spoken[last].second - spoken[last].first : 0;
 
-    // update last spoken
-    if (spoken.count(last)) {
-      spoken[last].first = spoken[last].second;
-      spoken[last].second = turn;
-    } else {
-      spoken[last] = {0, turn};
+      // update last spoken
+      if (spoken.count(last)) {
+        spoken[last].first = spoken[last].second;
+        spoken[last].second = turn;
+      } else {
+        spoken[last] = {0, turn};
+      }
     }
-  }
+    return last;
+  };
 
-  std::cout << last << std::endl;
+  std::cout << part1(max_turn_part1) << std::endl;
 
   return EXIT_SUCCESS;
 }
