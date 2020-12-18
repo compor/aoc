@@ -8,6 +8,7 @@
 #include <iostream>
 #include <map>
 #include <numeric>
+#include <set>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -27,9 +28,13 @@ bool isvalid(ull val, const bounds_t &b) {
   return val >= b.lower && val <= b.upper;
 }
 
+bool isvalid(ull val, const bounds_t &b1, const bounds_t &b2) {
+  return isvalid(val, b1) || isvalid(val, b2);
+}
+
 ull isvalid(ull val, const rules_t &r) {
   return std::any_of(r.begin(), r.end(), [val](const auto &e) {
-    return isvalid(val, e.second.first) || isvalid(val, e.second.second);
+    return isvalid(val, e.second.first, e.second.second);
   });
 }
 
@@ -84,16 +89,89 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  std::vector<ticket_t> valid;
   ull erate = 0;
   for (auto e : nearby) {
+    bool noerrors = true;
     for (auto k : e) {
       if (!isvalid(k, rules)) {
         erate += k;
+        noerrors = false;
+      }
+    }
+    if (noerrors)
+      valid.push_back(e);
+  }
+
+  valid.push_back(own);
+
+  std::map<ull, std::set<std::string>> f2r;
+
+  for (ull i = 0; i < own.size(); ++i) {
+    // f2r[i] = {};
+    for (auto &k : rules) {
+      f2r[i].insert(k.first);
+    }
+  }
+
+  for (const auto &e : valid) {
+    ull i = 0;
+    for (const auto &f : e) {
+      for (const auto &r : rules) {
+        if (!isvalid(f, r.second.first, r.second.second)) {
+          f2r[i].erase(r.first);
+        }
+      }
+      i++;
+    }
+  }
+
+  std::set<ull> visited;
+  while (visited.size() < f2r.size()) {
+    ull pos;
+    bool found = false;
+    for (const auto &e : f2r) {
+      if (e.second.size() <= 1 && !visited.count(e.first)) {
+        pos = e.first;
+        visited.insert(pos);
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      for (ull i = 0; i < f2r.size(); i++) {
+        if (i == pos)
+          continue;
+
+        f2r[i].erase(*f2r[pos].begin());
       }
     }
   }
 
+  for (auto &e : f2r) {
+    std::cout << "field " << e.first << " with potential rules: ";
+    for (auto &k : e.second) {
+      std::cout << k << " ";
+    }
+    std::cout << std::endl;
+  }
+
+  const auto &part2 = [&f2r](const ticket_t &t) {
+    ull p = 1;
+
+    ull i = 0;
+    for (const auto &e : t) {
+      if (f2r[i++].begin()->find("departure") != std::string::npos) {
+        p *= e;
+      }
+    }
+
+    return p;
+  };
+
   std::cout << erate << std::endl;
+  std::cout << part2(own) << std::endl;
 
   return EXIT_SUCCESS;
 }
