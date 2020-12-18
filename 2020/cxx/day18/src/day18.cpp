@@ -45,7 +45,7 @@ void process(std::vector<token_t> &rpn) {
   }
 }
 
-void to_rpn(const std::vector<token_t> &tokens, std::vector<token_t> &rpn) {
+void to_rpn1(const std::vector<token_t> &tokens, std::vector<token_t> &rpn) {
   std::vector<token_t> ops;
 
   for (auto &c : tokens) {
@@ -57,6 +57,38 @@ void to_rpn(const std::vector<token_t> &tokens, std::vector<token_t> &rpn) {
       if (ops.size() && ops.back().type != '(') {
         rpn.push_back(ops.back());
         ops.pop_back();
+      }
+      ops.push_back(c);
+    } else if (c.type == ')') {
+      while (ops.back().type != '(') {
+        rpn.push_back(ops.back());
+        ops.pop_back();
+      }
+      ops.pop_back();
+    }
+  }
+
+  for (sll i = ops.size() - 1; i >= 0; --i) {
+    rpn.push_back(ops[i]);
+  }
+}
+
+void to_rpn2(const std::vector<token_t> &tokens, std::vector<token_t> &rpn) {
+  std::vector<token_t> ops;
+
+  for (auto &c : tokens) {
+    if (c.type == '0') {
+      rpn.push_back(c);
+    } else if (c.type == '(') {
+      ops.push_back(c);
+    } else if (c.type == '+' || c.type == '*') {
+      while (ops.size() && ops.back().type != '(') {
+        if (c.type == '*' && ops.back().type == '+') {
+          rpn.push_back(ops.back());
+          ops.pop_back();
+        } else {
+          break;
+        }
       }
       ops.push_back(c);
     } else if (c.type == ')') {
@@ -112,12 +144,20 @@ int main(int argc, char *argv[]) {
   auto part1 = std::accumulate(expr.begin(), expr.end(), 0ull,
                                [](ull acc, const auto &e) {
                                  std::vector<token_t> rpn;
-                                 to_rpn(e, rpn);
+                                 to_rpn1(e, rpn);
+                                 process(rpn);
+                                 return acc + rpn.back().val;
+                               });
+  auto part2 = std::accumulate(expr.begin(), expr.end(), 0ull,
+                               [](ull acc, const auto &e) {
+                                 std::vector<token_t> rpn;
+                                 to_rpn2(e, rpn);
                                  process(rpn);
                                  return acc + rpn.back().val;
                                });
 
   std::cout << part1 << '\n';
+  std::cout << part2 << '\n';
 
   return EXIT_SUCCESS;
 }
