@@ -36,6 +36,16 @@ bool is_reachable(const std::vector<std::vector<ull>> &g,
   return false;
 }
 
+void count(const std::vector<std::vector<ull>> &g, ull src, ull &sum,
+           ull cnt = 1) {
+  for (auto i = 0ull; i < g[src].size(); ++i) {
+    if (g[src][i]) {
+      sum += cnt * g[src][i];
+      count(g, i, sum, cnt * g[src][i]);
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   std::ifstream fin;
   fin.open(argv[1]);
@@ -95,12 +105,12 @@ int main(int argc, char *argv[]) {
 
   auto shinygold = bags["shiny gold"];
 
-  ull count = 0;
+  ull cnt = 0;
   for (auto i = 0ull; i < g.size(); ++i) {
     std::set<ull> visited;
     if (i != shinygold) {
       if (is_reachable(g, visited, i, shinygold))
-        count++;
+        cnt++;
     }
   }
 
@@ -111,7 +121,11 @@ int main(int argc, char *argv[]) {
   // std::cout << '\n';
   //}
 
-  std::cout << count << std::endl;
+  ull sum = 0;
+  count(g, shinygold, sum);
+
+  std::cout << cnt << std::endl;
+  std::cout << sum << std::endl;
 
   return EXIT_SUCCESS;
 }
