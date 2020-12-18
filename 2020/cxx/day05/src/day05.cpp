@@ -46,12 +46,21 @@ int main(int argc, char *argv[]) {
     input.push_back(inputval);
   }
 
-  ull max = 0;
+  std::vector<ull> seatids;
   for (auto c : input) {
-    max = std::max(max, seatid(c));
+    seatids.push_back(seatid(c));
+  }
+  std::sort(seatids.begin(), seatids.end());
+
+  ull mine = 0;
+  for (auto i = 0u; i < seatids.size() - 1; ++i) {
+    if (seatids[i + 1] - seatids[i] == 2) {
+      mine = seatids[i] + 1;
+    }
   }
 
-  std::cout << max << std::endl;
+  std::cout << seatids.back() << std::endl;
+  std::cout << mine << std::endl;
 
   return EXIT_SUCCESS;
 }
