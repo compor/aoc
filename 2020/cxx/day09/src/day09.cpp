@@ -6,64 +6,112 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
 using ull = unsigned long long;
+using bag2idx = std::map<std::string, ull>;
+
+bool is_reachable(const std::vector<std::vector<ull>> &g,
+                  std::set<ull> &visited, ull src, ull dst) {
+  if (src == dst)
+    return true;
+
+  if (visited.count(src)) {
+    return false;
+  }
+  visited.insert(src);
+
+  for (auto i = 0ull; i < g[src].size(); ++i) {
+    if (g[src][i] && is_reachable(g, visited, i, dst)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 int main(int argc, char *argv[]) {
   std::ifstream fin;
   fin.open(argv[1]);
 
   std::string inputval;
-  std::vector<ull> input;
-  std::set<ull> p;
-  const ull n = 25; // preamble length
-  ull val = 0;
+  bag2idx bags;
 
-  ull we = 0;
-  ull wb = 0;
-  while (fin >> inputval) {
-    val = std::stoull(inputval);
+  ull idx = 0;
+  while (std::getline(fin, inputval)) {
+    std::istringstream ss(inputval);
+    std::string stok;
 
-    if (we++ < n) {
-      input.push_back(val);
-      p.insert(val);
-    } else {
-      if (std::any_of(input.begin(), input.end(),
-                      [val, &p](const auto &e) { return p.count(val - e); })) {
-        p.erase(input[wb++]);
-        input.push_back(val);
-        p.insert(val);
-      } else {
+    std::string srcbag{""};
+    ss >> stok;
+    srcbag += stok;
+    ss >> stok;
+    srcbag += " " + stok;
+    // std::cout << srcbag << std::endl;
+    bags[srcbag] = idx++;
+  }
+
+  fin.clear();
+  fin.seekg(0);
+
+  std::vector<ull> col(bags.size(), 0ull);
+  std::vector<std::vector<ull>> g(bags.size(), col);
+
+  while (std::getline(fin, inputval)) {
+    for (auto &c : inputval) {
+      if (c == ',')
+        c = ' ';
+    }
+    std::istringstream ss(inputval);
+    std::string stok;
+
+    std::string srcbag{""};
+    ss >> stok;
+    srcbag += stok;
+    ss >> stok;
+    srcbag += " " + stok;
+    // std::cout << srcbag << std::endl;
+
+    ss >> stok >> stok;
+
+    std::string num, destbag;
+    while (ss.good()) {
+      ss >> num >> destbag >> stok;
+      if (num == "no")
         break;
-      }
+      destbag += " " + stok;
+      ss >> stok;
+
+      ull n = std::stoull(num);
+      g[bags[srcbag]][bags[destbag]] = n;
     }
   }
 
-  std::cout << val << std::endl;
+  auto shinygold = bags["shiny gold"];
 
-  ull we2 = 0;
-  ull wb2 = 0;
-  for (auto i = 0u; i < we; ++i) {
-    wb2 = i;
-    we2 = i + 1;
-    ull sum = input[wb2] + input[we2];
-    while (sum < val) {
-      sum += input[++we2];
-    }
-
-    if (sum == val) {
-      break;
+  ull count = 0;
+  for (auto i = 0ull; i < g.size(); ++i) {
+    std::set<ull> visited;
+    if (i != shinygold) {
+      if (is_reachable(g, visited, i, shinygold))
+        count++;
     }
   }
 
-  std::sort(&input[wb2], &input[we2]);
+  // for (auto &col : g) {
+  // for (auto &e : col) {
+  // std::cout << e;
+  //}
+  // std::cout << '\n';
+  //}
 
-  std::cout << input[wb2] + input[we2] << std::endl;
+  std::cout << count << std::endl;
 
   return EXIT_SUCCESS;
 }
